@@ -81,7 +81,6 @@ export type ValidationIssues = Partial<
 
 export interface LabelValidationResponse {
   id: string;          
-  jobId: string;           
   status: ValidationStatusType;  
   createdAt: string;       
   success: boolean;        
@@ -91,4 +90,4 @@ export interface LabelValidationResponse {
 }
 
 // For job creation response
-export type JobCreateResponse = Pick<LabelValidationResponse, 'jobId' | 'status'>;
+export type JobCreateResponse = Pick<LabelValidationResponse, 'id' | 'status'>;
