@@ -5,8 +5,10 @@ import { Button } from "./ui/button";
 import {
   alcoholLabelSchema,
   type AlcoholLabelFormData,
-  type ValidationResponse,
+  type LabelValidationResponse,
 } from "../types";
+import { useCreateLabelValidation, useLabelValidation } from "../queries";
+import { ValidationResultModal } from "./ValidationResultModal";
 
 interface FormFieldProps {
   label: string;
@@ -157,9 +159,21 @@ function ImageUpload({ onFileChange, error }: ImageUploadProps) {
 }
 
 export default function AlcoholLabelForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [validationResult, setValidationResult] =
-    useState<ValidationResponse | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
+
+  const createValidationMutation = useCreateLabelValidation();
+  const { data: validationResult, isLoading: isPolling } =
+    useLabelValidation(jobId);
+
+  // When validation completes, show the modal
+  if (
+    validationResult &&
+    validationResult.status === "completed" &&
+    !showResultModal
+  ) {
+    setShowResultModal(true);
+  }
 
   const {
     register,
@@ -181,9 +195,6 @@ export default function AlcoholLabelForm() {
   const watchedImage = watch("labelImage");
 
   const onSubmit = async (data: AlcoholLabelFormData) => {
-    setIsSubmitting(true);
-    setValidationResult(null);
-
     try {
       // Create FormData for file upload
       const formData = new FormData();
@@ -197,24 +208,18 @@ export default function AlcoholLabelForm() {
         formData.append("labelImage", data.labelImage);
       }
 
-      // TODO: Replace with actual API endpoint
-      const response = await fetch("/api/validate-label", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit form");
-      }
-
-      const result: ValidationResponse = await response.json();
-      setValidationResult(result);
+      // Start validation job
+      const result = await createValidationMutation.mutateAsync(formData);
+      setJobId(result.jobId);
     } catch (error) {
       console.error("Error submitting form:", error);
       // Handle error (could show error toast/notification)
-    } finally {
-      setIsSubmitting(false);
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowResultModal(false);
+    setJobId(null);
   };
 
   const handleImageChange = (file: File | null) => {
@@ -300,76 +305,24 @@ export default function AlcoholLabelForm() {
           />
         </FormField>
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? "Validating..." : "Validate Label"}
+        <Button
+          type="submit"
+          disabled={createValidationMutation.isPending || isPolling}
+          className="w-full"
+        >
+          {createValidationMutation.isPending
+            ? "Starting validation..."
+            : isPolling
+            ? "Validating..."
+            : "Validate Label"}
         </Button>
       </form>
 
-      {validationResult && (
-        <div className="mt-6 p-4 rounded-lg border">
-          <h3 className="text-lg font-medium mb-4">
-            Validation Result
-            {validationResult.success ? (
-              <span className="text-green-600 ml-2">✓ Passed</span>
-            ) : (
-              <span className="text-red-600 ml-2">✗ Failed</span>
-            )}
-          </h3>
-
-          {validationResult.issues &&
-            Object.keys(validationResult.issues).length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-red-800">Issues Found:</h4>
-                <ul className="list-disc list-inside space-y-1 text-red-700">
-                  {Object.entries(validationResult.issues).map(
-                    ([field, message]) => (
-                      <li key={field}>
-                        <strong>
-                          {field === "general" ? "General" : field}:
-                        </strong>{" "}
-                        {message}
-                      </li>
-                    )
-                  )}
-                </ul>
-              </div>
-            )}
-
-          {validationResult.extracted && (
-            <div className="mt-4 p-3 bg-gray-50 rounded">
-              <h4 className="font-medium text-gray-800 mb-2">
-                Extracted from Image:
-              </h4>
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                {validationResult.extracted.brandName && (
-                  <>
-                    <dt className="font-medium">Brand:</dt>
-                    <dd>{validationResult.extracted.brandName}</dd>
-                  </>
-                )}
-                {validationResult.extracted.productClass && (
-                  <>
-                    <dt className="font-medium">Product Class:</dt>
-                    <dd>{validationResult.extracted.productClass}</dd>
-                  </>
-                )}
-                {validationResult.extracted.alcoholContent && (
-                  <>
-                    <dt className="font-medium">ABV:</dt>
-                    <dd>{validationResult.extracted.alcoholContent}%</dd>
-                  </>
-                )}
-                {validationResult.extracted.netContents && (
-                  <>
-                    <dt className="font-medium">Net Contents:</dt>
-                    <dd>{validationResult.extracted.netContents}</dd>
-                  </>
-                )}
-              </dl>
-            </div>
-          )}
-        </div>
-      )}
+      <ValidationResultModal
+        isOpen={showResultModal}
+        onClose={handleCloseModal}
+        validation={validationResult || null}
+      />
     </div>
   );
 }
