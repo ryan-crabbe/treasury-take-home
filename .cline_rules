@@ -1,0 +1,44 @@
+# Cline Rules - Alcohol Label Validator MVP
+
+## Project Overview
+
+This is an MVP for validating alcohol label data against uploaded label images. The system uses OCR to extract text from images and compares it with user-submitted form data.
+
+## Design Principles
+
+- **MVP First**: Keep implementations simple and functional, avoid over-engineering
+- **In-Memory Storage**: Use simple Maps/caches, no persistent database for MVP
+- **Async Processing**: Label validation runs in background, immediate response to user
+- **Type Consistency**: Frontend and backend types must stay synchronized
+
+## Architecture
+
+- **Frontend**: React with TypeScript, handles form submission and displays results
+- **Backend**: NestJS with TypeScript, processes validation requests
+- **Data Flow**: Form submission → immediate response with 'processing' → background validation → status updates
+
+## Key Components
+
+- **Types**: Shared interfaces between frontend/backend (keep consistent)
+- **Cache**: Simple in-memory Map storage (key: id, value: LabelValidationResponse)
+- **IDs**: Use simple incrementing counter (1, 2, 3...)
+- **Status**: 'processing', 'completed', 'failed'
+
+## API Endpoints
+
+- `GET /label-validation` - Get all validations
+- `GET /label-validation/:id` - Get single validation
+- `POST /label-validation` - Create validation (accepts multipart form data)
+
+## File Structure Rules
+
+- Backend types in `src/types.ts` (mirror frontend exactly)
+- Service handles business logic and cache management
+- Controller handles HTTP requests and validation
+- Keep placeholder implementations clearly marked
+
+## Development Guidelines
+
+- Don't add complexity unless explicitly requested
+- Maintain type consistency between frontend/backend
+- Keep error handling simple but functional
