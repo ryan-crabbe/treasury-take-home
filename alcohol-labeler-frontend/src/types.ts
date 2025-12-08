@@ -70,11 +70,16 @@ export type ValidationIssues = Partial<
   Record<keyof AlcoholLabelFormData | "general", string>
 >;
 
-export interface ValidationResponse {
+export interface LabelValidationResponse {
   id: string;          
+  jobId: string;           
+  status: 'processing' | 'completed' | 'failed';  
   createdAt: string;       
   success: boolean;        
   formData: AlcoholLabelFormData; 
   extracted?: ExtractedLabelData; 
   issues?: ValidationIssues;      
 }
+
+// For job creation response
+export type JobCreateResponse = Pick<LabelValidationResponse, 'jobId' | 'status'>;
