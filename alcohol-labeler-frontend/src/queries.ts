@@ -1,5 +1,5 @@
 import { Query, useMutation, useQuery } from '@tanstack/react-query';
-import type { AlcoholLabelFormData, LabelValidationResponse, JobCreateResponse } from './types';
+import type { LabelValidationResponse, JobCreateResponse } from './types';
 
 // Create label validation job
 export function useCreateLabelValidation() {
