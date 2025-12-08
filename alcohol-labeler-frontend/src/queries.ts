@@ -54,7 +54,6 @@ export function useAllLabelValidations() {
       
       return response.json();
     },
-    refetchInterval: 5000, // Refetch every 5 seconds to keep data fresh
     refetchIntervalInBackground: false,
   });
 }
