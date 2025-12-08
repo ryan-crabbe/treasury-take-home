@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+// Status constants for label validation
+export const VALIDATION_STATUS = {
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed'
+} as const;
+
+export type ValidationStatusType = typeof VALIDATION_STATUS[keyof typeof VALIDATION_STATUS];
+
 // TypeScript interfaces
 export interface AlcoholLabelForm {
   brandName: string;
@@ -73,7 +82,7 @@ export type ValidationIssues = Partial<
 export interface LabelValidationResponse {
   id: string;          
   jobId: string;           
-  status: 'processing' | 'completed' | 'failed';  
+  status: ValidationStatusType;  
   createdAt: string;       
   success: boolean;        
   formData: AlcoholLabelFormData; 

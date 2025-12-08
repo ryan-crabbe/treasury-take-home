@@ -2,7 +2,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "./ui/button";
-import { alcoholLabelSchema, type AlcoholLabelFormData } from "../types";
+import {
+  alcoholLabelSchema,
+  type AlcoholLabelFormData,
+  VALIDATION_STATUS,
+} from "../types";
 import { useCreateLabelValidation, useLabelValidation } from "../queries";
 import { ValidationResultModal } from "./ValidationResultModal";
 
@@ -165,7 +169,7 @@ export default function AlcoholLabelForm() {
   // When validation completes, show the modal
   if (
     validationResult &&
-    validationResult.status === "completed" &&
+    validationResult.status === VALIDATION_STATUS.COMPLETED &&
     !showResultModal
   ) {
     setShowResultModal(true);

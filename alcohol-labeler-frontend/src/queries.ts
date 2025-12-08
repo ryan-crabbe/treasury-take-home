@@ -1,5 +1,6 @@
 import { Query, useMutation, useQuery } from '@tanstack/react-query';
 import type { LabelValidationResponse, JobCreateResponse } from './types';
+import { VALIDATION_STATUS } from './types';
 
 // Create label validation job
 export function useCreateLabelValidation() {
@@ -34,7 +35,7 @@ export function useLabelValidation(jobId: string | null) {
     },
     enabled: !!jobId,
     refetchInterval: (query: Query<LabelValidationResponse>) => {
-      return query.state.data?.status === 'processing' ? 1000 : false;
+      return query.state.data?.status === VALIDATION_STATUS.PROCESSING ? 1000 : false;
     },
     refetchIntervalInBackground: false,
   });
