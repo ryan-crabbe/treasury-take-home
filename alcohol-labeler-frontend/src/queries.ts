@@ -6,7 +6,7 @@ import { VALIDATION_STATUS } from './types';
 export function useCreateLabelValidation() {
   return useMutation({
     mutationFn: async (formData: FormData): Promise<JobCreateResponse> => {
-      const response = await fetch("/api/validate-label", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/label-validation`, {
         method: "POST",
         body: formData,
       });
@@ -25,7 +25,7 @@ export function useLabelValidation(jobId: string | null) {
   return useQuery({
     queryKey: ['labelValidation', jobId],
     queryFn: async (): Promise<LabelValidationResponse> => {
-      const response = await fetch(`/api/label-validations/${jobId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/label-validation/${jobId}`);
       
       if (!response.ok) {
         throw new Error("Failed to fetch validation result");
@@ -46,7 +46,7 @@ export function useAllLabelValidations() {
   return useQuery({
     queryKey: ['allLabelValidations'],
     queryFn: async (): Promise<LabelValidationResponse[]> => {
-      const response = await fetch('/api/label-validations');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/label-validation`);
       
       if (!response.ok) {
         throw new Error("Failed to fetch all validation results");
