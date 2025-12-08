@@ -40,3 +40,21 @@ export function useLabelValidation(jobId: string | null) {
     refetchIntervalInBackground: false,
   });
 }
+
+// Fetch all label validations
+export function useAllLabelValidations() {
+  return useQuery({
+    queryKey: ['allLabelValidations'],
+    queryFn: async (): Promise<LabelValidationResponse[]> => {
+      const response = await fetch('/api/label-validations');
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch all validation results");
+      }
+      
+      return response.json();
+    },
+    refetchInterval: 5000, // Refetch every 5 seconds to keep data fresh
+    refetchIntervalInBackground: false,
+  });
+}
