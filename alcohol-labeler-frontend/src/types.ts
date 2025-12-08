@@ -71,10 +71,10 @@ export type ValidationIssues = Partial<
 >;
 
 export interface ValidationResponse {
-  id: string;              // generated per submission
-  createdAt: string;       // ISO timestamp
-  success: boolean;        // true if there are no blocking issues
-  formData: AlcoholLabelFormData; // echo back the submitted data
-  extracted?: ExtractedLabelData; // optional but helpful for UI explanations
-  issues?: ValidationIssues;      // e.g., { brandName: "Did not match label", general: "ABV out of range" }
+  id: string;          
+  createdAt: string;       
+  success: boolean;        
+  formData: AlcoholLabelFormData; 
+  extracted?: ExtractedLabelData; 
+  issues?: ValidationIssues;      
 }
