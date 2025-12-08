@@ -2,11 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "./ui/button";
-import {
-  alcoholLabelSchema,
-  type AlcoholLabelFormData,
-  type LabelValidationResponse,
-} from "../types";
+import { alcoholLabelSchema, type AlcoholLabelFormData } from "../types";
 import { useCreateLabelValidation, useLabelValidation } from "../queries";
 import { ValidationResultModal } from "./ValidationResultModal";
 
