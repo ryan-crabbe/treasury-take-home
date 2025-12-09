@@ -7,12 +7,15 @@ import {
   ExtractedLabelData,
   AlcoholLabelFormData 
 } from '../types';
+import { OcrService } from '../ocr/ocr.service';
 
 @Injectable()
 export class LabelValidationService {
   // In-memory cache - key: id, value: LabelValidationResponse
   private readonly validationsCache = new Map<string, LabelValidationResponse>();
   private counter = 1;
+
+  constructor(private readonly ocrService: OcrService) {}
 
 
   getAllLabelValidations(): LabelValidationResponse[] {
@@ -72,8 +75,8 @@ export class LabelValidationService {
       // Simulate processing delay
       await this.delay(2000);
 
-      // Extract text from image (placeholder)
-      const extractedData = await this.extractTextFromImage(imageFile);
+      // Extract text from image using OCR service
+      const extractedData = await this.ocrService.extractTextFromImage(imageFile);
 
       // Compare extracted data with form data (placeholder)
       const validation = this.validationsCache.get(id);
@@ -107,21 +110,6 @@ export class LabelValidationService {
     }
   }
 
-  /**
-   * Placeholder: Extract text from uploaded image
-   */
-  private async extractTextFromImage(imageFile: Express.Multer.File): Promise<ExtractedLabelData> {
-    // Simulate OCR processing delay
-    await this.delay(1000);
-
-    // Return mock extracted data for now
-    return {
-      brandName: 'Mock Brand Name',
-      productClass: 'Mock Product Class', 
-      alcoholContent: 12.5,
-      netContents: '750ml'
-    };
-  }
 
   /**
    * Placeholder: Compare extracted data with form data

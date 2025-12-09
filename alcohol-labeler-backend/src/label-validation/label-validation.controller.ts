@@ -10,10 +10,18 @@ import {
   BadRequestException
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { LabelValidationService } from './label-validation.service';
 import { LabelValidationResponse, CreateLabelValidationDto } from '../types';
 
-@Controller('label-validation')
+function filenameFactory(_req: any, file: Express.Multer.File, cb: Function) {
+  const unique =
+    Date.now() + '-' + Math.round(Math.random() * 1e9) + extname(file.originalname || '');
+  cb(null, unique);
+}
+
+@Controller('label-validations')
 export class LabelValidationController {
   constructor(private readonly labelValidationService: LabelValidationService) {}
 
@@ -37,7 +45,15 @@ export class LabelValidationController {
    * Create a new label validation
    */
   @Post()
-  @UseInterceptors(FileInterceptor('labelImage'))
+  @UseInterceptors(
+    FileInterceptor('labelImage', {
+      storage: diskStorage({
+        destination: 'uploads',
+        filename: filenameFactory,
+      }),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
   async createLabelValidation(
     @Body('brandName') brandName: string,
     @Body('productClass') productClass: string,
