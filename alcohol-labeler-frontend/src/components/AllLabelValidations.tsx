@@ -4,9 +4,10 @@ import type { LabelValidationResponse } from "../types";
 
 interface StatusIndicatorProps {
   status: string;
+  success?: boolean;
 }
 
-function StatusIndicator({ status }: StatusIndicatorProps) {
+function StatusIndicator({ status, success }: StatusIndicatorProps) {
   switch (status) {
     case VALIDATION_STATUS.PROCESSING:
       return (
@@ -16,17 +17,26 @@ function StatusIndicator({ status }: StatusIndicatorProps) {
         </div>
       );
     case VALIDATION_STATUS.COMPLETED:
-      return (
-        <div className="flex items-center">
-          <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-          <span className="ml-2 text-sm text-green-700">Completed</span>
-        </div>
-      );
+      if (success) {
+        return (
+          <div className="flex items-center">
+            <div className="h-3 w-3 bg-green-500 rounded-full"></div>
+            <span className="ml-2 text-sm text-green-700">Valid</span>
+          </div>
+        );
+      } else {
+        return (
+          <div className="flex items-center">
+            <div className="h-3 w-3 bg-orange-500 rounded-full"></div>
+            <span className="ml-2 text-sm text-orange-700">Invalid</span>
+          </div>
+        );
+      }
     case VALIDATION_STATUS.FAILED:
       return (
         <div className="flex items-center">
           <div className="h-3 w-3 bg-red-500 rounded-full"></div>
-          <span className="ml-2 text-sm text-red-700">Failed</span>
+          <span className="ml-2 text-sm text-red-700">Processing Failed</span>
         </div>
       );
     default:
@@ -60,7 +70,10 @@ function ValidationRow({ validation }: ValidationRowProps) {
           </p>
         </div>
         <div className="ml-4 flex-shrink-0">
-          <StatusIndicator status={validation.status} />
+          <StatusIndicator
+            status={validation.status}
+            success={validation.success}
+          />
         </div>
       </div>
     </div>

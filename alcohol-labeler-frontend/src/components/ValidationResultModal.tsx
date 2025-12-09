@@ -8,6 +8,20 @@ import {
 import { Button } from "./ui/button";
 import type { LabelValidationResponse } from "../types";
 
+// Function to convert field names to user-friendly labels
+function getFieldDisplayName(field: string): string {
+  const fieldMapping: Record<string, string> = {
+    brandName: "Brand Name",
+    productClass: "Product Class",
+    alcoholContent: "Alcohol Content",
+    netContents: "Net Contents",
+    labelImage: "Label Image",
+    general: "General",
+  };
+
+  return fieldMapping[field] || field;
+}
+
 interface ValidationResultModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -48,8 +62,7 @@ export function ValidationResultModal({
               <ul className="list-disc list-inside space-y-1 text-red-700 bg-red-50 p-3 rounded">
                 {Object.entries(validation.issues).map(([field, message]) => (
                   <li key={field}>
-                    <strong>{field === "general" ? "General" : field}:</strong>{" "}
-                    {message}
+                    <strong>{getFieldDisplayName(field)}:</strong> {message}
                   </li>
                 ))}
               </ul>
