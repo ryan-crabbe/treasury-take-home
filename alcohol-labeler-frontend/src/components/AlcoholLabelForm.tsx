@@ -210,7 +210,7 @@ export default function AlcoholLabelForm() {
 
       // Start validation job
       const result = await createValidationMutation.mutateAsync(formData);
-      setJobId(result.jobId);
+      setJobId(result.id);
     } catch (error) {
       console.error("Error submitting form:", error);
       // Handle error (could show error toast/notification)
