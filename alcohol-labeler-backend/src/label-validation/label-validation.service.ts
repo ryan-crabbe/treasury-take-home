@@ -144,12 +144,12 @@ export class LabelValidationService {
     // Alcohol Content - Fuzzy match the percentage string
     if (typeof formData.alcoholContent === 'number') {
       const alcoholText = `${formData.alcoholContent}%`;
-      const alcoholMatch = this.fuzzyMatchField(rawText, alcoholText, 80);
+      const alcoholMatch = this.fuzzyMatchField(rawText, alcoholText, 90);
       console.log(`Alcohol content match: "${alcoholText}" -> ${alcoholMatch.confidence}%`);
       if (!alcoholMatch.found) {
         // Try without the % symbol
         const alcoholNoPercent = formData.alcoholContent.toString();
-        const alcoholMatch2 = this.fuzzyMatchField(rawText, alcoholNoPercent, 80);
+        const alcoholMatch2 = this.fuzzyMatchField(rawText, alcoholNoPercent, 90);
         console.log(`Alcohol content match (no %): "${alcoholNoPercent}" -> ${alcoholMatch2.confidence}%`);
         if (!alcoholMatch2.found) {
           issues.alcoholContent = `Alcohol content "${alcoholText}" not found in label`;
