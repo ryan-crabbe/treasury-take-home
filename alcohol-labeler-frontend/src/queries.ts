@@ -1,9 +1,11 @@
-import { Query, useMutation, useQuery } from '@tanstack/react-query';
+import { Query, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LabelValidationResponse, JobCreateResponse } from './types';
 import { VALIDATION_STATUS } from './types';
 
 // Create label validation job
 export function useCreateLabelValidation() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: async (formData: FormData): Promise<JobCreateResponse> => {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/label-validation`, {
@@ -16,6 +18,10 @@ export function useCreateLabelValidation() {
       }
 
       return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allLabelValidations'] });
+      queryClient.invalidateQueries({ queryKey: ['labelValidation'] });
     },
   });
 }
@@ -53,6 +59,10 @@ export function useAllLabelValidations() {
       }
       
       return response.json();
+    },
+    refetchInterval: (query: Query<LabelValidationResponse[]>) => {
+      const processing = query.state.data?.some(item => item.status === VALIDATION_STATUS.PROCESSING);
+      return processing ? 1000 : false;
     },
     refetchIntervalInBackground: false,
   });
