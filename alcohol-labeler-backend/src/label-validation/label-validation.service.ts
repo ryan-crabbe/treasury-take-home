@@ -43,7 +43,7 @@ export class LabelValidationService {
       productClass: dto.productClass,
       alcoholContent: dto.alcoholContent,
       netContents: dto.netContents,
-      labelImage: null // We don't store the actual file in memory for this MVP
+      labelImage: null
     };
 
     // Create initial validation response with 'processing' status
