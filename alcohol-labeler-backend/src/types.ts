@@ -69,7 +69,13 @@ export const alcoholLabelSchema = z.object({
 
 export type AlcoholLabelFormData = z.infer<typeof alcoholLabelSchema>;
 
-// Extracted data from the label image (what the backend AI sees)
+// Raw OCR result from the label image
+export interface OcrResult {
+  rawText: string;
+  confidence?: number;
+}
+
+// Legacy - keeping for backward compatibility during transition
 export interface ExtractedLabelData {
   brandName?: string;
   productClass?: string;

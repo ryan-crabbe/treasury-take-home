@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import * as fuzz from 'fuzzball';
 import { 
   LabelValidationResponse, 
   CreateLabelValidationDto, 
@@ -6,7 +7,8 @@ import {
   ValidationStatusType,
   ExtractedLabelData,
   AlcoholLabelFormData,
-  ValidationIssues
+  ValidationIssues,
+  OcrResult
 } from '../types';
 import { OcrService } from '../ocr/ocr.service';
 
@@ -73,24 +75,20 @@ export class LabelValidationService {
    */
   private async processLabelValidation(id: string, imageFile: Express.Multer.File): Promise<void> {
     try {
-      // Simulate processing delay
-      await this.delay(2000);
+      // Extract raw text from image using OCR service
+      const ocrResult = await this.ocrService.extractRawTextFromImage(imageFile);
 
-      // Extract text from image using OCR service
-      const extractedData = await this.ocrService.extractTextFromImage(imageFile);
-
-      // Compare extracted data with form data
+      // Compare OCR text with form data using fuzzy matching
       const validation = this.validationsCache.get(id);
       if (!validation) return;
 
-      const comparisonResult = await this.compareExtractedWithFormData(extractedData, validation.formData);
+      const comparisonResult = await this.fuzzyMatchFormDataWithOcr(ocrResult, validation.formData);
 
       // Update validation with results
       const updatedValidation: LabelValidationResponse = {
         ...validation,
         status: VALIDATION_STATUS.COMPLETED,
         success: comparisonResult.success,
-        extracted: extractedData,
         issues: comparisonResult.issues
       };
 
@@ -113,60 +111,88 @@ export class LabelValidationService {
 
 
   /**
-   * Compare extracted OCR data with form data
+   * Compare form data with raw OCR text using fuzzy matching
    */
-  private async compareExtractedWithFormData(
-    extracted: ExtractedLabelData, 
+  private async fuzzyMatchFormDataWithOcr(
+    ocrResult: OcrResult,
     formData: AlcoholLabelFormData
   ): Promise<{ success: boolean; issues?: ValidationIssues }> {
-    // Simulate comparison processing delay
-    await this.delay(500);
-
     const issues: ValidationIssues = {};
+    const rawText = ocrResult.rawText.toLowerCase();
 
-    // brandName (soft fuzzy match)
+    console.log('Starting fuzzy matching validation...');
+    console.log(`Raw OCR text: "${rawText}"`);
+
+    // Brand Name - Use fuzzy matching with 50% threshold (lowered)
     if (formData.brandName) {
-      if (!extracted.brandName) {
-        issues.brandName = 'Brand name not detected on label';
-      } else if (!this.similarText(extracted.brandName, formData.brandName)) {
-        issues.brandName = 'Brand name does not match';
+      const brandMatch = this.fuzzyMatchField(rawText, formData.brandName, 60);
+      console.log(`Brand match: "${formData.brandName}" -> ${brandMatch.confidence}%`);
+      if (!brandMatch.found) {
+        issues.brandName = `Brand name not found in label (confidence: ${brandMatch.confidence}%)`;
       }
     }
 
-    // productClass (contains match)
+    // Product Class - Use fuzzy matching with 45% threshold (lowered)
     if (formData.productClass) {
-      if (!extracted.productClass) {
-        issues.productClass = 'Product class not detected';
-      } else if (!this.containsText(extracted.productClass, formData.productClass)) {
-        issues.productClass = 'Product class does not match';
+      const classMatch = this.fuzzyMatchField(rawText, formData.productClass, 60);
+      console.log(`Product class match: "${formData.productClass}" -> ${classMatch.confidence}%`);
+      if (!classMatch.found) {
+        issues.productClass = `Product class not found in label (confidence: ${classMatch.confidence}%)`;
       }
     }
 
-    // alcoholContent (±0.5 tolerance for MVP)
+    // Alcohol Content - Fuzzy match the percentage string
     if (typeof formData.alcoholContent === 'number') {
-      if (typeof extracted.alcoholContent !== 'number') {
-        issues.alcoholContent = 'Alcohol content not detected';
-      } else if (Math.abs(extracted.alcoholContent - formData.alcoholContent) > 0.5) {
-        issues.alcoholContent = 'Alcohol content mismatch (allowed ±0.5)';
+      const alcoholText = `${formData.alcoholContent}%`;
+      const alcoholMatch = this.fuzzyMatchField(rawText, alcoholText, 80);
+      console.log(`Alcohol content match: "${alcoholText}" -> ${alcoholMatch.confidence}%`);
+      if (!alcoholMatch.found) {
+        // Try without the % symbol
+        const alcoholNoPercent = formData.alcoholContent.toString();
+        const alcoholMatch2 = this.fuzzyMatchField(rawText, alcoholNoPercent, 80);
+        console.log(`Alcohol content match (no %): "${alcoholNoPercent}" -> ${alcoholMatch2.confidence}%`);
+        if (!alcoholMatch2.found) {
+          issues.alcoholContent = `Alcohol content "${alcoholText}" not found in label`;
+        }
       }
     }
 
-    // netContents (normalize to ml and compare)
+    // Net Contents - Fuzzy match the volume string
     if (formData.netContents) {
-      const formMl = this.toMl(formData.netContents);
-      const extMl = extracted.netContents ? this.toMl(extracted.netContents) : null;
-
-      if (formMl == null) {
-        // Can't parse form; skip strict check (MVP)
-      } else if (extMl == null) {
-        issues.netContents = 'Net contents not detected';
-      } else if (Math.abs(extMl - formMl) > 1) {
-        issues.netContents = 'Net contents do not match';
+      const volumeMatch = this.fuzzyMatchField(rawText, formData.netContents, 60);
+      console.log(`Volume match: "${formData.netContents}" -> ${volumeMatch.confidence}%`);
+      if (!volumeMatch.found) {
+        issues.netContents = `Net contents "${formData.netContents}" not found in label (confidence: ${volumeMatch.confidence}%)`;
       }
     }
 
     const success = Object.keys(issues).length === 0;
+    console.log(`Fuzzy matching completed. Success: ${success}, Issues: ${Object.keys(issues).length}`);
+    
     return { success, issues: success ? undefined : issues };
+  }
+
+  /**
+   * Fuzzy match a field value against raw OCR text using fuzzball
+   */
+  private fuzzyMatchField(rawText: string, expectedValue: string, threshold: number): { found: boolean; confidence: number } {
+    const normalizedExpected = expectedValue.toLowerCase();
+    const normalizedOcr = rawText.toLowerCase();
+    
+    // Try multiple fuzzy matching algorithms and take the best score
+    const scores = [
+      fuzz.partial_ratio(normalizedExpected, normalizedOcr),
+      fuzz.token_set_ratio(normalizedExpected, normalizedOcr),
+      fuzz.token_sort_ratio(normalizedExpected, normalizedOcr),
+      fuzz.ratio(normalizedExpected, normalizedOcr)
+    ];
+    
+    const confidence = Math.max(...scores);
+    
+    return {
+      found: confidence >= threshold,
+      confidence
+    };
   }
 
   /**
@@ -236,12 +262,5 @@ export class LabelValidationService {
    */
   private generateId(): string {
     return (this.counter++).toString();
-  }
-
-  /**
-   * Utility function to simulate async delays
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
