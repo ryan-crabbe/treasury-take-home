@@ -22,7 +22,7 @@
 - **shadcn/ui**: High-quality, accessible UI components
 - **Lucide React**: Beautiful & consistent icon library
 
-## THought Process
+## Thought Process
 
 Made the client a vite app because I didnt need the resources a next app gives (not going to use its routing/SSR/SEO). I also decided on using tanstack query to make the pattern for querying the server simple and highlights a clear pattern of how to continue to do things in the future. For the form I used react hook form because it does a really good job of letting me but forms together and also giving me a way to validate these forms using a zod schema before they get sent to the server. Decided on having a dedicated NestJS server because I think Nest is like Express but comes with a lot of built in things that makes it easy to grow. I also just like having my server be really structured, in this case because its an mvp I only had a Controller layer, and then a App layer (service files) but if it were to be more serious i would have a dedicated repo layer and maybe also split the App layer into reads and writes service files instead of one/two service files doing everything. I think this rides that fine line of not over engineering but still giving a clear path of how to grow should the project need to handle more requests/users in the future. On the backend for the actual 'AI' processing I used tesseract js and had to play around with a couple different things but for an MVP I found that just normalizing that raw extracted string and then doing some fuzzy search on it yielded the best results. I also gave back the confidence rating to the user should it fail. Also for the server I wanted some sort of persistence but instead of hooking up a postgres database I instead used an in memory map.
 
