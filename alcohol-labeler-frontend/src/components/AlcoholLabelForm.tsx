@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "./ui/button";
@@ -36,9 +36,15 @@ interface ImageUploadProps {
   currentFile?: File | null;
 }
 
-function ImageUpload({ onFileChange, error }: ImageUploadProps) {
+function ImageUpload({ onFileChange, error, currentFile }: ImageUploadProps) {
   const [dragActive, setDragActive] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!currentFile) {
+      setPreview(null);
+    }
+  }, [currentFile]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -180,6 +186,7 @@ export default function AlcoholLabelForm() {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<AlcoholLabelFormData>({
     resolver: zodResolver(alcoholLabelSchema),
@@ -216,6 +223,7 @@ export default function AlcoholLabelForm() {
       // Start validation job
       const result = await createValidationMutation.mutateAsync(formData);
       setJobId(result.id);
+      reset();
     } catch (error) {
       console.error("Error submitting form:", error);
       // Handle error (could show error toast/notification)
