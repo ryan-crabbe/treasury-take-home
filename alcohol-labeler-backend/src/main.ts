@@ -10,7 +10,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [process.env.FRONTEND_URL || 'http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    credentials: true,
+    credentials: false,
   });
   
   await app.listen(process.env.PORT ?? 3000);
