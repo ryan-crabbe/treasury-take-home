@@ -9,6 +9,14 @@ export const VALIDATION_STATUS = {
 
 export type ValidationStatusType = typeof VALIDATION_STATUS[keyof typeof VALIDATION_STATUS];
 
+// Volume input types for the form UI
+export type VolumeUnit = 'mL' | 'L' | 'fl oz' | 'oz';
+
+export interface VolumeInput {
+  value: number | '';
+  unit: VolumeUnit;
+}
+
 // TypeScript interfaces
 export interface AlcoholLabelForm {
   brandName: string;
@@ -42,12 +50,11 @@ export const alcoholLabelSchema = z.object({
       message: "Alcohol content must be between 0% and 100%"
     }),
   
-  netContents: z
-    .string()
-    .optional()
-    .refine((val) => !val || val.length >= 2, {
-      message: "Net contents must be at least 2 characters if provided"
-    }),
+  volumeValue: z
+    .union([z.number().min(0, "Volume must be positive"), z.literal("")])
+    .optional(),
+  
+  volumeUnit: z.enum(['mL', 'L', 'fl oz', 'oz']),
   
   labelImage: z
     .instanceof(File)

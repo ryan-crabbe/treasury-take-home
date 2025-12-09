@@ -187,8 +187,9 @@ export default function AlcoholLabelForm() {
       brandName: "",
       productClass: "",
       alcoholContent: 0,
-      netContents: "",
       labelImage: null,
+      volumeValue: "",
+      volumeUnit: "mL",
     },
   });
 
@@ -201,9 +202,13 @@ export default function AlcoholLabelForm() {
       formData.append("brandName", data.brandName);
       formData.append("productClass", data.productClass);
       formData.append("alcoholContent", data.alcoholContent.toString());
-      if (data.netContents) {
-        formData.append("netContents", data.netContents);
+
+      // Combine volume value and unit into netContents
+      if (data.volumeValue && data.volumeValue !== null) {
+        const netContents = `${data.volumeValue} ${data.volumeUnit}`;
+        formData.append("netContents", netContents);
       }
+
       if (data.labelImage) {
         formData.append("labelImage", data.labelImage);
       }
@@ -281,13 +286,30 @@ export default function AlcoholLabelForm() {
           </p>
         </FormField>
 
-        <FormField label="Net Contents" error={errors.netContents?.message}>
-          <input
-            {...register("netContents")}
-            type="text"
-            placeholder="e.g., 750 mL, 12 fl oz"
-            className="mt-1 block w-full rounded-md border-gray-300 border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+        <FormField label="Volume" error={errors.volumeValue?.message}>
+          <div className="flex space-x-3">
+            <div className="flex-1">
+              <input
+                {...register("volumeValue", { valueAsNumber: true })}
+                type="number"
+                step="0.1"
+                min="0"
+                placeholder="e.g., 750, 12"
+                className="mt-1 block w-full rounded-md border-gray-300 border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <div className="w-24">
+              <select
+                {...register("volumeUnit")}
+                className="mt-1 block w-full rounded-md border-gray-300 border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="mL">mL</option>
+                <option value="L">L</option>
+                <option value="fl oz">fl oz</option>
+                <option value="oz">oz</option>
+              </select>
+            </div>
+          </div>
           <p className="text-xs text-gray-500 mt-1">
             Volume of the product (optional)
           </p>
