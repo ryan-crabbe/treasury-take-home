@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useAllLabelValidations } from "../queries";
 import { VALIDATION_STATUS } from "../types";
 import type { LabelValidationResponse } from "../types";
+import { ValidationResultModal } from "./ValidationResultModal";
 
 interface StatusIndicatorProps {
   status: string;
@@ -51,11 +53,22 @@ function StatusIndicator({ status, success }: StatusIndicatorProps) {
 
 interface ValidationRowProps {
   validation: LabelValidationResponse;
+  onClick: () => void;
 }
 
-function ValidationRow({ validation }: ValidationRowProps) {
+function ValidationRow({ validation, onClick }: ValidationRowProps) {
+  // Only make completed validations clickable
+  const isClickable = validation.status === VALIDATION_STATUS.COMPLETED;
+
   return (
-    <div className="border-b border-gray-200 py-3 px-4 hover:bg-gray-50">
+    <div
+      className={`border-b border-gray-200 py-3 px-4 ${
+        isClickable
+          ? "hover:bg-gray-50 cursor-pointer transition-colors"
+          : "hover:bg-gray-50"
+      }`}
+      onClick={isClickable ? onClick : undefined}
+    >
       <div className="flex justify-between items-start">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 truncate">
@@ -81,7 +94,21 @@ function ValidationRow({ validation }: ValidationRowProps) {
 }
 
 export default function AllLabelValidations() {
+  const [selectedValidation, setSelectedValidation] =
+    useState<LabelValidationResponse | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
   const { data: validations, isLoading, error } = useAllLabelValidations();
+
+  const handleValidationClick = (validation: LabelValidationResponse) => {
+    setSelectedValidation(validation);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedValidation(null);
+  };
 
   if (isLoading) {
     return (
@@ -168,9 +195,19 @@ export default function AllLabelValidations() {
       </div>
       <div className="max-h-96 overflow-y-auto">
         {validations.map((validation) => (
-          <ValidationRow key={validation.id} validation={validation} />
+          <ValidationRow
+            key={validation.id}
+            validation={validation}
+            onClick={() => handleValidationClick(validation)}
+          />
         ))}
       </div>
+
+      <ValidationResultModal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        validation={selectedValidation}
+      />
     </div>
   );
 }
