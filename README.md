@@ -1,7 +1,5 @@
 # Alcohol Label Validation System
 
-A full-stack application that uses OCR (Optical Character Recognition) to validate alcohol beverage labels for compliance with regulatory requirements.
-
 ## Technology Stack
 
 ### Backend
@@ -24,11 +22,19 @@ A full-stack application that uses OCR (Optical Character Recognition) to valida
 - **shadcn/ui**: High-quality, accessible UI components
 - **Lucide React**: Beautiful & consistent icon library
 
+## THought Process
+
+Made the client a vite app because I didnt need the resources a next app gives (not going to use its routing/SSR/SEO). I also decided on using tanstack query to make the pattern for querying the server simple and highlights a clear pattern of how to continue to do things in the future. For the form I used react hook form because it does a really good job of letting me but forms together and also giving me a way to validate these forms using a zod schema before they get sent to the server. Decided on having a dedicated NestJS server because I think Nest is like Express but comes with a lot of built in things that makes it easy to grow. I also just like having my server be really structured, in this case because its an mvp I only had a Controller layer, and then a App layer (service files) but if it were to be more serious i would have a dedicated repo layer and maybe also split the App layer into reads and writes service files instead of one/two service files doing everything. I think this rides that fine line of not over engineering but still giving a clear path of how to grow should the project need to handle more requests/users in the future. On the backend for the actual 'AI' processing I used tesseract js and had to play around with a couple different things but for an MVP I found that just normalizing that raw extracted string and then doing some fuzzy search on it yielded the best results. I also gave back the confidence rating to the user should it fail.
+
+I used typescript for the frontend and the backend with a types file for both to keep things consistent but If i had more time I would tweak the tsconfig so that i could have one dto file that exports all the types from the server and also then lets me import them into the frontend, so that I dont have to repeat the types in two different types files.
+
+You can also access the app at https://treasury-take-home.vercel.app/ but keep in mind if its not working right away its because the server is still spinning up (renders free tier means that inactivity = server spins down, so will have to wait 50 seconds max for it to come back up).
+
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js (v20.19 or higher)
 - npm
 
 ### Installation
@@ -92,18 +98,11 @@ A full-stack application that uses OCR (Optical Character Recognition) to valida
    ```
    The application will be available at `http://localhost:5173`
 
-## Features
-
-- **Image Upload**: Upload alcohol label images for validation
-- **OCR Processing**: Extract text from label images using Tesseract.js
-- **Label Validation**: Check compliance against regulatory requirements
-- **Results Display**: View validation results with detailed feedback
-- **Responsive UI**: Modern, accessible interface built with shadcn/ui components
-
 ## API Endpoints
 
 - `POST /label-validation/validate` - Upload and validate an alcohol label image
 - `GET /label-validation` - Retrieve all label validations
+- `GET /label-validation/:id` - Retrieve a label validations
 
 ## Development
 
@@ -111,18 +110,14 @@ A full-stack application that uses OCR (Optical Character Recognition) to valida
 
 ```bash
 cd alcohol-labeler-backend
-npm run start:dev  # Start in watch mode
-npm run test       # Run tests
-npm run lint       # Run linter
+npm run start:dev
 ```
 
 ### Frontend Development
 
 ```bash
 cd alcohol-labeler-frontend
-npm run dev        # Start development server
-npm run build      # Build for production
-npm run lint       # Run linter
+npm run dev
 ```
 
 ## Project Structure
@@ -143,7 +138,3 @@ treasury-take-home/
 │   └── public/                  # Static assets
 └── README.md
 ```
-
-## License
-
-This project is for educational/demonstration purposes.
